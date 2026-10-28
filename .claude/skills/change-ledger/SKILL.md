@@ -14,10 +14,10 @@ Keep `CHANGES.md` in the working folder (the folder this kit lives in). Create i
 
 ## Before every change
 
-1. **Restore point.** Run in PowerShell:
-   `Checkpoint-Computer -Description "cudo-lite before <change>" -RestorePointType MODIFY_SETTINGS`
-   Windows allows one restore point per 24 hours by default. If it refuses, say so plainly and ask the owner whether to proceed without a new one. Do not change the setting that limits restore points. If System Protection is off, tell the owner and ask; do not turn it on without a yes.
-2. **State the change and its undo**, one line each, and wait for the owner's typed "yes".
+1. **State the change and its undo**, one line each, say a restore point will be made first, and wait for the owner's typed "yes". No yes means no restore point and no change.
+2. **Restore point.** This session is not running as Administrator. Tell the owner a Windows "allow this app to make changes" box is about to appear and to click Yes, then run:
+   `Start-Process powershell.exe -Verb RunAs -ArgumentList '-NoExit','-Command','Checkpoint-Computer -Description cudo-lite -RestorePointType MODIFY_SETTINGS; Get-ComputerRestorePoint | Select-Object -Last 1'`
+   Ask the owner to read you what that window shows, then close it. Windows allows one restore point per 24 hours. If it warns that one already exists, give the owner its date: one made earlier in this session covers this change; an older one does not, so ask whether to proceed. Do not change the setting that limits restore points. If System Protection is off, tell the owner and ask. With a yes, turn it on in the same kind of window with `Enable-ComputerRestore -Drive 'C:\'` and record that as a change.
 3. **Append the row BEFORE running the change.** Time, what, the exact command or setting, how to undo, and `Verified: no`.
 4. **Run the change**, then check it worked (re-run the read-only check that showed the problem).
 5. **Update the row** to `Verified: yes`, or write what went wrong. A failed change is still a row.

@@ -14,12 +14,12 @@ First ask the owner: what has been going wrong, since when, and what changed rec
 1. **System summary and uptime**
    `Get-ComputerInfo -Property CsName,WindowsProductName,WindowsVersion,OsBuildNumber,CsManufacturer,CsModel,CsTotalPhysicalMemory,OsLastBootUpTime`
    `(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime`
-   A PC that has not restarted in weeks can explain slowness.
+   A PC that has not restarted in weeks can explain slowness. Only Restart resets the boot time; Shut down followed by power on does not when Fast Startup is on, so a "recent" boot time can hide a long-running session.
 2. **Disk space**: `Get-PSDrive -PSProvider FileSystem`
    Under 10 percent free on C: is a problem by itself.
 3. **Disk health**
    `Get-PhysicalDisk | Select FriendlyName,MediaType,HealthStatus,OperationalStatus`
-   `Get-PhysicalDisk | Get-StorageReliabilityCounter | Select DeviceId,Temperature,Wear,ReadErrorsTotal,WriteErrorsTotal` (works only on some drives; skip if it errors)
+   `Get-PhysicalDisk | Get-StorageReliabilityCounter | Select DeviceId,Temperature,Wear,ReadErrorsTotal,WriteErrorsTotal` (works only on some drives and needs Administrator, so "access denied" is expected here; skip it if it errors)
    Anything other than Healthy is serious: tell the owner to back up important files first.
 4. **Memory**
    `Get-CimInstance Win32_PhysicalMemory | Select Manufacturer,Capacity,Speed`
@@ -27,7 +27,7 @@ First ask the owner: what has been going wrong, since when, and what changed rec
 5. **CPU and top processes**
    `Get-Process | Sort CPU -Descending | Select -First 15 Name,CPU,WS`
    `Get-Process | Sort WS -Descending | Select -First 10 Name,WS`
-   Name each unfamiliar process in plain English before suggesting anything about it.
+   The CPU column is total CPU seconds used since the process started, not current load, so a long-running program can look big without being busy now. Name each unfamiliar process in plain English before suggesting anything about it.
 6. **Recent errors and critical events (14 days)**
    `Get-WinEvent -FilterHashtable @{LogName='System';Level=1,2;StartTime=(Get-Date).AddDays(-14)} | Select -First 40 TimeCreated,Id,ProviderName,Message`
    `Get-WinEvent -FilterHashtable @{LogName='Application';Level=1,2;StartTime=(Get-Date).AddDays(-14)} | Select -First 40 TimeCreated,Id,ProviderName,Message`
@@ -35,9 +35,9 @@ First ask the owner: what has been going wrong, since when, and what changed rec
 7. **Unexpected shutdowns and crashes**
    `Get-WinEvent -FilterHashtable @{LogName='System';Id=41,1001,6008;StartTime=(Get-Date).AddDays(-30)} | Select TimeCreated,Id,ProviderName,Message`
    41 = restarted without a clean shutdown, 1001 = a crash report was made, 6008 = the previous shutdown was unexpected.
-8. **Crash dumps**: `Get-ChildItem C:\Windows\Minidump -ErrorAction SilentlyContinue | Select Name,Length,LastWriteTime`
-   Count and dates show how often it crashes. Do not open or send the files anywhere.
-9. **Devices with errors**: `Get-PnpDevice | Where Status -ne 'OK' | Select FriendlyName,Class,Status,InstanceId`
+8. **Crash dumps**: `Get-ChildItem C:\Windows\Minidump | Select Name,Length,LastWriteTime`
+   Count and dates show how often it crashes. "Access is denied" means the folder needs Administrator to read, NOT that there are no crashes: say so and rely on item 7. "Cannot find path" means no dumps were saved. Do not open or send the files anywhere.
+9. **Devices with errors**: `Get-PnpDevice -PresentOnly | Where Status -ne 'OK' | Select FriendlyName,Class,Status,InstanceId`
 10. **Drivers (display, network, storage)**
     `Get-CimInstance Win32_PnPSignedDriver | Where DeviceClass -in 'DISPLAY','NET','SCSIADAPTER','HDC' | Select DeviceName,DriverVersion,DriverDate`
     Note drivers older than two years or dated right before the problem began.
@@ -61,16 +61,18 @@ Write a short ranked list of likely causes. Each one gets: the cause in plain En
 
 ## Part 3: Repairs (every one is a CHANGE: restore point, one-line change and undo, typed yes, ledger row, one at a time)
 
+This session is NOT running as Administrator, so `sfc`, `DISM`, `chkdsk` and `netsh` fail here. Run each one in its own Administrator window that stays open. Tell the owner a Windows "allow this app to make changes" box will appear and to click Yes, then run `Start-Process powershell.exe -Verb RunAs -ArgumentList '-NoExit','-Command','<command>'`. Do not wait on that window. Ask the owner to say when it finishes and read you the last lines, then close it.
+
 | Repair | Command or step | Undo |
 |---|---|---|
-| Check system files | `sfc /scannow` (needs an Administrator PowerShell; takes a while) | Only repairs Windows files; no undo needed, but record the result. |
-| Repair the Windows image | `DISM /Online /Cleanup-Image /RestoreHealth` (Administrator; needs internet) | Cannot be individually undone; the restore point is the way back. Say so. |
-| Disk check, read-only | `chkdsk C: /scan` (this one only reads) | Nothing to undo. |
-| Disk repair | `chkdsk C: /f` (schedules a check at next reboot; locks the PC while it runs) | Cannot be undone. Only after a backup and when `/scan` reported errors. |
+| Check system files | `sfc /scannow` (Administrator window; 10 to 30 minutes) | Only repairs Windows files; no undo needed, but record the result. |
+| Repair the Windows image | `DISM /Online /Cleanup-Image /RestoreHealth` (Administrator window; needs internet; 10 to 30 minutes and can sit on one percentage for a long time, do not close it) | Cannot be individually undone; the restore point is the way back. Say so. |
+| Disk check, read-only | `chkdsk C: /scan` in an Administrator window (only reads; a few minutes). Not a change: no restore point or ledger row, but still ask first. | Nothing to undo. |
+| Disk repair | `chkdsk C: /f` in an Administrator window. It asks to schedule the check for the next restart (Y/N), and the owner types Y in that window. The check runs at the next restart, before Windows loads, and can take an hour or more. The owner restarts when ready. | Cannot be undone. Only after a backup and when `/scan` reported errors. |
 | Update a driver | Download only from the PC or device maker's official site, tell the owner the address first, install it | Device Manager, device Properties, Driver tab, Roll Back Driver; or the restore point. |
 | Disable a startup item | Task Manager, Startup apps tab, right-click, Disable (or disable the one scheduled task) | Enable it again in the same place. |
-| Clean temp folders | Delete the contents of `$env:TEMP` only, after listing the size and asking | Cannot be undone. Say so. Skip files in use. |
-| Reset the network stack | `netsh winsock reset` then restart | `netsh winsock reset` has no direct undo; the restore point is the way back. Say so. |
+| Clean temp folders | List the size first and ask, then `Get-ChildItem $env:TEMP -Force | Remove-Item -Recurse -Force -ErrorAction Continue` (files in use are skipped and reported) | Cannot be undone. Say so. |
+| Reset the network stack | `netsh winsock reset` in an Administrator window, then the owner restarts the PC when ready | `netsh winsock reset` has no direct undo; the restore point is the way back. Say so. |
 | Windows Update repair | Run the built-in troubleshooter: Settings, System, Troubleshoot, Other troubleshooters, Windows Update | Nothing to undo; record the result. |
 
 Do not use registry cleaners, "PC booster" tools, or driver-updater programs. Do not disable Defender, the firewall, or updates.
