@@ -61,6 +61,8 @@ Write a short ranked list of likely causes. Each one gets: the cause in plain En
 
 ## Part 3: Repairs (every one is a CHANGE: restore point, one-line change and undo, typed yes, ledger row, one at a time)
 
+Act, do not instruct: after the yes, run it.
+
 This session is NOT running as Administrator, so `sfc`, `DISM`, `chkdsk` and `netsh` fail here. Run each one in its own Administrator window that stays open. Tell the owner a Windows "allow this app to make changes" box will appear and to click Yes, then run `Start-Process powershell.exe -Verb RunAs -ArgumentList '-NoExit','-Command','<command>'`. Do not wait on that window. Ask the owner to say when it finishes and read you the last lines, then close it.
 
 | Repair | Command or step | Undo |
