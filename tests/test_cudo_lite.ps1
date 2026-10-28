@@ -297,7 +297,7 @@ try {
     Check 'no file in the kit contains a 40-character hex string' ($longSha.Count -eq 0) (($longSha | ForEach-Object Name) -join ',')
     $install = [IO.File]::ReadAllText((Join-Path $repo 'INSTALL-PROMPT.md'))
     Check 'install prompt downloads the v0.2.0 release asset, not a tag archive or main' ($install.Contains('https://github.com/Nickflix3003/cudo-lite/releases/download/v0.2.0/cudo-lite-v0.2.0.zip') -and -not $install.Contains('/archive/') -and -not $install.Contains('heads/main'))
-    Check 'install prompt checks the SHA256 before expanding' ($install.Contains('(Get-FileHash -Algorithm SHA256 .\cudo-lite.zip).Hash') -and $install.Contains('<SHA256>') -and $install.IndexOf('Get-FileHash') -lt $install.IndexOf('Expand-Archive') -and $install -match 'do NOT expand')
+    Check 'install prompt checks the SHA256 before expanding' ($install.Contains('(Get-FileHash -Algorithm SHA256 .\cudo-lite.zip).Hash') -and ($install -match 'It must equal [0-9a-f]{64} exactly') -and $install.IndexOf('Get-FileHash') -lt $install.IndexOf('Expand-Archive') -and $install -match 'do NOT expand')
     Check 'install prompt uses the cudo-lite-v0.2.0 folder everywhere' (-not $install.Contains('cudo-lite-0.2.0') -and ([regex]::Matches($install, 'cudo-lite-v0\.2\.0')).Count -ge 5 -and $install.Contains('Remove-Item .\cudo-lite-v0.2.0 -Recurse -Force'))
     Check 'install prompt checks scripts\collect.ps1' ($install.Contains('scripts\collect.ps1'))
 
