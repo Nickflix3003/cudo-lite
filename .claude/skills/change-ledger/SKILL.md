@@ -15,12 +15,14 @@ Keep `CHANGES.md` in the working folder (the folder this kit lives in). Create i
 ## Before every change
 
 1. **State the change and its undo**, one line each, say a restore point will be made first, and wait for the owner's typed "yes". No yes means no restore point and no change.
-2. **Restore point.** This session is not running as Administrator. Tell the owner a Windows "allow this app to make changes" box is about to appear and to click Yes, then run:
-   `Start-Process powershell.exe -Verb RunAs -ArgumentList '-NoExit','-Command','Checkpoint-Computer -Description cudo-lite -RestorePointType MODIFY_SETTINGS; Get-ComputerRestorePoint | Select-Object -Last 1'`
-   Ask the owner to read you what that window shows, then close it. Windows allows one restore point per 24 hours. If it warns that one already exists, give the owner its date: one made earlier in this session covers this change; an older one does not, so ask whether to proceed. Do not change the setting that limits restore points. If System Protection is off, tell the owner and ask. With a yes, turn it on in the same kind of window with `Enable-ComputerRestore -Drive 'C:\'` and record that as a change.
-3. **Append the row BEFORE running the change.** Time, what, the exact command or setting, how to undo, and `Verified: no`.
+2. **Restore point, once per session.** This session is not running as Administrator, so `scripts\safety.ps1` runs in its own Administrator window, as the `fix-pc` skill describes under "Restore point and safety net". It makes the restore point, exports the startup keys and writes a baseline into `backups\` in this folder, and reports `OK` or `STOP` in `backups\safety-result.txt`, and only an `OK` that carries this run's own RunId counts. **A STOP, or no OK, ends the run: make no change and tell the owner plainly.** Windows allows one restore point per 24 hours; a restore point made earlier in this session covers later changes, so do not make a second one. If one already exists from today, give the owner its date and ask before accepting it. Do not change the setting that limits restore points. If System Protection is off, tell the owner and ask; with a yes, add the ledger row for turning it on FIRST (step 3 below), then run the script again with `-EnableSystemProtection`.
+3. **Append the row BEFORE running the change.** Time, what, the exact command or setting, how to undo, and `Verified: no`. Use the script, so the row is always well formed and the ledger stays in this one place:
+   `Set-ExecutionPolicy -Scope Process Bypass -Force; & .\scripts\log-fix.ps1 -What '<what>' -Command '<exact command or setting>' -Undo '<how to undo>'`
+   Run it in this session's own PowerShell, not with `powershell -File`: an argument passed through `-File` loses its double quotes on Windows PowerShell 5.1. Inside single quotes, double any apostrophe in the text (Microsoft''s). Every parameter is named; a stray word is an error.
+   The script keeps the text exactly as given, except that a pipe is written `\|` so the table stays five columns (read `\|` back as a pipe). If you edit a row by hand, keep that escape and never change the command itself.
+   If it fails, the ledger was not written: stop and tell the owner.
 4. **Run the change**, then check it worked (re-run the read-only check that showed the problem).
-5. **Update the row** to `Verified: yes`, or write what went wrong. A failed change is still a row.
+5. **Update the row** in `CHANGES.md` to `Verified: yes`, or write what went wrong. A failed change is still a row.
 
 ## When the owner says "undo"
 
