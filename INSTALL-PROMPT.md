@@ -1,20 +1,14 @@
 # Install prompt
 
-Open the Claude desktop app, go to the Code tab, choose an empty folder, and paste everything inside the box below.
+Open the Claude desktop app, go to the Code tab, and paste everything inside the box below.
 
 ```
-You are in an empty folder on a Windows PC. Install "Cudo Lite" here, using PowerShell for every command:
+Please set up Cudo Lite on this Windows PC. It is a small open-source kit from https://github.com/Nickflix3003/cudo-lite. Use PowerShell for every command, and do each step yourself. If a step fails, stop and tell me in plain words.
 
-1. Run: Get-ChildItem -Force. If anything is here other than a .claude folder, stop and ask me to pick an empty folder.
-2. Run: Invoke-WebRequest -Uri https://github.com/Nickflix3003/cudo-lite/releases/download/v0.2.0/cudo-lite-v0.2.0.zip -OutFile cudo-lite.zip -UseBasicParsing
-   Then run: (Get-FileHash -Algorithm SHA256 .\cudo-lite.zip).Hash
-   It must equal f22ab864fc8f60f2aeedbd8fdb48cc62a499fab460abca35f99825e30062435c exactly (ignore upper or lower case). If it does not, stop, do NOT expand the zip, and tell me.
-3. Run: Expand-Archive cudo-lite.zip -DestinationPath . -Force
-4. Run: Copy-Item -Path .\cudo-lite-v0.2.0\* -Destination . -Recurse -Force
-   Then run: Copy-Item -Path .\cudo-lite-v0.2.0\.claude -Destination . -Recurse -Force
-5. Check that .\cudo-lite-v0.2.0, .\CLAUDE.md, .\scripts\collect.ps1, .\scripts\safety.ps1, .\scripts\log-fix.ps1, .\.claude\skills\fix-pc\SKILL.md and .\.claude\skills\change-ledger\SKILL.md exist. If any is missing, stop and tell me.
-6. Run: Remove-Item .\cudo-lite.zip; Remove-Item .\cudo-lite-v0.2.0 -Recurse -Force. Delete nothing else.
-7. Read CLAUDE.md and the two skills under .claude/skills (fix-pc and change-ledger). Follow CLAUDE.md for the rest of this session.
-8. Confirm in one line what was installed and that you will ask before making any change.
-9. Then start the fix-pc skill by asking me what has been going wrong, since when, and what changed recently. Do not run anything else until I answer.
+1. If the folder $HOME\cudo-lite already exists, stop and tell me.
+2. Download https://github.com/Nickflix3003/cudo-lite/releases/download/v0.3.0/cudo-lite-v0.3.0.zip to $env:TEMP\cudo-lite.zip with Invoke-WebRequest -UseBasicParsing.
+3. Check it: (Get-FileHash -Algorithm SHA256 $env:TEMP\cudo-lite.zip).Hash must equal 32bb8f7b94d755b08e05cd4358cd3e88558c58a9dadd8efb1305caa5f247c8d6 exactly (ignore upper or lower case). If it does not, delete the zip, stop and tell me.
+4. Unpack it into $HOME\cudo-lite with Expand-Archive, then delete the zip.
+5. Run $HOME\cudo-lite\setup.ps1 using powershell -NoProfile -ExecutionPolicy Bypass -File. You may read it first. It installs Anthropic's Claude Code if it is missing, accepting that installer's agreements for me, and opens a welcome session in this app that asks me whether to finish installing.
+6. Tell me in plain words what it printed.
 ```
