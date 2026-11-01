@@ -296,7 +296,7 @@ try {
     $longSha = @($allTracked | Where-Object { [IO.File]::ReadAllText($_.FullName) -match '\b[0-9a-f]{40}\b' })
     Check 'no file in the kit contains a 40-character hex string' ($longSha.Count -eq 0) (($longSha | ForEach-Object Name) -join ',')
     $install = [IO.File]::ReadAllText((Join-Path $repo 'INSTALL-PROMPT.md'))
-    Check 'install prompt downloads the v0.3.0 release asset, not a tag archive or main' ($install.Contains('https://github.com/Nickflix3003/cudo-lite/releases/download/v0.3.0/cudo-lite-v0.3.0.zip'))
+    Check 'install prompt downloads the v0.3.1 release asset, not a tag archive or main' ($install.Contains('https://github.com/Nickflix3003/cudo-lite/releases/download/v0.3.1/cudo-lite-v0.3.1.zip'))
     Check 'install prompt checks the SHA256 before expanding' ($install.Contains('(Get-FileHash -Algorithm SHA256 $env:TEMP\cudo-lite.zip).Hash') -and ($install -match 'must equal [0-9a-f]{64} exactly') -and ($install.IndexOf('Get-FileHash') -lt $install.IndexOf('Expand-Archive')))
     Check 'install prompt never mentions the old release' (-not $install.Contains('v0.2.0'))
     Check 'install prompt runs setup.ps1' ($install.Contains('cudo-lite\setup.ps1'))

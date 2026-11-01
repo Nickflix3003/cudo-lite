@@ -3,7 +3,7 @@
 Cudo Lite is a safety charter, two skills and three small PowerShell scripts that let Claude Code diagnose and fix problems on a Windows PC, with the owner's permission at every step.
 
 - **Nothing keeps running.** No services, no scheduled tasks, no startup entries. Setup's only background step is a short hidden session that says hello; if you answer no, a hidden helper removes the Cudo folders and then itself.
-- **Nothing phones home.** No telemetry, no uploads, no accounts of its own. The one flow of data is Claude itself: what the assistant reads is sent to the Claude account you are signed in to. If Claude Code needs a sign-in, Claude's own page opens.
+- **Nothing phones home.** No telemetry, no uploads, no accounts of its own. The one flow of data is Claude itself: what the assistant reads is sent to the Claude account you are signed in to. Setup never asks you to sign in.
 - **Nothing changes without a typed yes.** The assistant looks first (read-only), then asks before each change.
 
 ## What is in the box
@@ -20,7 +20,7 @@ Cudo Lite is a safety charter, two skills and three small PowerShell scripts tha
 
 Open the Claude desktop app, go to the Code tab, and paste the prompt from `INSTALL-PROMPT.md`. It downloads this kit into a `cudo-lite` folder in your home folder, checks it, and runs `setup.ps1`.
 
-`setup.ps1` finds Claude Code, or installs Anthropic's own if it is missing (accepting the installer's agreements for you, which the prompt says up front), and makes a `cudo-welcome` folder in your home folder. It then opens a new session in the app that asks whether to finish installing.
+`setup.ps1` finds Claude Code, or installs Anthropic's own if it is missing (accepting the installer's agreements for you, which the prompt says up front), and makes a `cudo-welcome` folder in your home folder. It then opens a new session in the app that asks whether to finish installing. If terminal Claude is not signed in, it opens a new session page with a message ready, and you press send, so you never sign in twice.
 
 ## Remove
 

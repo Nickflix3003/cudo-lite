@@ -1,6 +1,7 @@
 # Cudo setup, the one script the install prompt runs. Windows, no admin rights asked for by this script itself.
-# 1. Finds a working Claude Code, or installs Anthropic's own.  2. Checks the sign-in, opening Claude's own page if one is needed.
-# 3. Makes the Cudo welcome folder and opens a welcome session in the Claude desktop app, with no terminal window.
+# 1. Finds a working Claude Code, or installs Anthropic's own.  2. Makes the Cudo welcome folder.
+# 3. Opens a welcome session in the Claude desktop app, with no terminal window. If terminal Claude is not signed in, it opens a new
+#    session page in the app instead, with a message ready to send, and never asks for a second sign-in.
 # It never skips or changes a Claude permission: the welcome session asks for approvals the normal way.
 # Every line it prints starts with "Cudo:" so whoever runs it can repeat what happened in plain words.
 $ErrorActionPreference = 'Stop'
@@ -39,7 +40,7 @@ if (-not $claude) {
   }
   if (-not $claude) {
     # Anthropic's own installer, read into a file and run from there.
-    $inst = Join-Path $env:TEMP 'claude-code-install.ps1'
+    $inst = Join-Path $env:TEMP ('claude-code-install-' + [guid]::NewGuid().ToString('N') + '.ps1')
     try {
       Invoke-WebRequest -UseBasicParsing -Uri 'https://claude.ai/install.ps1' -OutFile $inst
       & powershell -NoProfile -ExecutionPolicy Bypass -File $inst *> $null
@@ -52,9 +53,16 @@ if (-not $claude) {
 }
 Say "Claude Code is ready"
 
-if (Test-Path -LiteralPath $welcome) { Stop-Setup "the folder $welcome already exists, so nothing was changed" 4 }
-New-Item -ItemType Directory $welcome | Out-Null
-$createdWelcome = $true
+# A folder from an earlier run of this setup is reused, so running it again works. Anything else with this name is left alone.
+$mark = Join-Path $welcome 'CLAUDE.md'
+if (Test-Path -LiteralPath $welcome) {
+  if (-not ((Test-Path -LiteralPath $mark) -and ((Get-Content -LiteralPath $mark -TotalCount 1) -eq '# Cudo welcome'))) {
+    Stop-Setup "the folder $welcome already exists and is not Cudo's, so nothing was changed" 4
+  }
+} else {
+  New-Item -ItemType Directory $welcome | Out-Null
+  $createdWelcome = $true
+}
 try {
   Copy-Item -LiteralPath (Join-Path $kit 'welcome\CLAUDE.md') -Destination (Join-Path $welcome 'CLAUDE.md')
   Set-Location -LiteralPath $welcome
@@ -73,19 +81,19 @@ function Start-Welcome {
   try { return ($raw | ConvertFrom-Json) } catch { return $null }
 }
 
-$w = Start-Welcome
-if (-not $w -or $w.is_error -or -not $w.session_id) {
-  $ErrorActionPreference = 'Continue'
-  & $claude auth status *> $null
-  $signedIn = $LASTEXITCODE -eq 0
-  $ErrorActionPreference = 'Stop'
-  if ($signedIn) { Stop-Setup "Claude is signed in but the welcome session did not start: $($w.result)" 9 }
-  Say 'Claude needs you to sign in. Its sign-in page is opening in your browser: please approve it there'
-  $p = Start-Process $claude -ArgumentList 'auth', 'login' -WindowStyle Hidden -PassThru
-  if (-not $p.WaitForExit(300000)) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Stop-Setup 'the sign-in was not finished within five minutes' 5 }
-  $w = Start-Welcome
-  if (-not $w -or $w.is_error -or -not $w.session_id) { Stop-Setup 'the welcome session could not start after signing in' 6 }
+function Open-WelcomeInApp {
+  # Terminal Claude could not start, most often because it has no sign-in: the app's does not carry over to it. So instead of asking this
+  # person to sign in a second time, open a new session page in the app, which already is signed in. The app fills the box and never sends it, so they press send.
+  if (-not (Test-Path -LiteralPath 'Registry::HKEY_CLASSES_ROOT\claude')) { Stop-Setup 'the Claude desktop app is not installed on this PC' 12 }
+  $ask = "Hello. Please read $welcome\CLAUDE.md and follow it."
+  try { Start-Process ('claude://code/new?q=' + [uri]::EscapeDataString($ask)) }
+  catch { Stop-Setup "the Claude app could not be opened: $_" 13 }
+  Say 'DONE: a new session page is open in the Claude app with a message ready. Go there and press send'
+  exit 0
 }
+
+$w = Start-Welcome
+if (-not $w -or $w.is_error -or -not $w.session_id) { Open-WelcomeInApp }
 Say 'the welcome session is ready'
 
 # --desktop refuses redirected output, so it gets its own hidden console and no terminal shows.
