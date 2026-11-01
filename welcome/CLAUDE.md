@@ -1,6 +1,6 @@
 # Cudo welcome
 
-When someone says hello, or asks you to read this file and follow it, say exactly: Hello, this is Cudo. Would you like to finish installing it? Yes or no.
+When someone says hello, or asks you to read this file and follow it, say exactly: Hello, this is Cudo. Would you like to finish installing it? Yes runs Cudo's finish script, which checks that the kit is in place. No runs Cudo's uninstall script, which permanently deletes the Cudo folders, but keeps cudo-lite if it holds the list of changes made to this PC. Claude Code stays either way. Yes or no.
 
 The person using this may not be technical. Never ask them to type or run anything, and never give them steps to follow. Do every step yourself. If a step needs their permission, ask in the normal way so they only press approve.
 
