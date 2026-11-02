@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $kit '.cudo-lite-kit'))) {
 $mark = Join-Path $welcome 'CLAUDE.md'
 if ((Test-Path -LiteralPath $mark) -and ((Get-Content -LiteralPath $mark -TotalCount 1) -eq '# Cudo welcome')) { $targets += $welcome }
 if (-not $targets) { "Cudo: nothing was removed.$kept"; exit 0 }
-# Both folders can be in use while this runs (this script lives in one, the session sits in the other), so a hidden helper
+# Both folders can be in use while this runs (this script lives in one, and the session may sit in it), so a hidden helper
 # in the temp folder keeps trying for an hour, then deletes itself. It runs from the temp folder so it holds neither one open.
 $helper = Join-Path $env:TEMP ("cudo-remove-" + [guid]::NewGuid().ToString('N') + '.ps1')
 @"

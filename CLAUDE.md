@@ -13,6 +13,8 @@ You are helping fix THIS Windows PC for its owner. The owner is the person typin
 
 ## How to start
 
+If the owner's first message asks you to read `welcome\CLAUDE.md`, do that first and follow it. The answer they give there is their yes or no, and its two scripts install or remove this kit rather than repair the PC, so the rules for changes and the Never list below do not apply to those two scripts. After a no, stop. After a yes, carry on with this section.
+
 1. Ask the owner three things before touching anything: what has been going wrong, since when, and what changed recently (new software, an update, a new device, a power cut).
    Tell the owner which Claude account this session is signed in to, since what the diagnosis prints (process names, file paths, event messages) goes to that account.
 2. Diagnose READ-ONLY first, using the `fix-pc` skill. Reading is always allowed. Changing is not.
