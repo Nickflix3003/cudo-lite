@@ -49,7 +49,9 @@ Say "Claude Code is ready"
 # The app's sign-in does not carry over to terminal Claude, so nothing here starts a terminal session or asks for a second sign-in.
 # It opens a new session page in the app, which already is signed in. The app fills the box and never sends it, so the person presses send.
 if (-not (Test-Path -LiteralPath 'Registry::HKEY_CLASSES_ROOT\claude')) { Stop-Setup 'the Claude desktop app is not installed on this PC' 12 }
-$ask = "Hello. I downloaded Cudo Lite from https://github.com/Nickflix3003/cudo-lite into $kit. Please read $kit\welcome\CLAUDE.md and follow it."
+# The stick's scripts set CUDO_SOURCE, so the message says truthfully where the kit came from.
+$ask = if ($env:CUDO_SOURCE -eq 'usb') { "Hello. I copied Cudo Lite from my USB stick into $kit. It is the kit from https://github.com/Nickflix3003/cudo-lite. Please read $kit\welcome\CLAUDE.md and follow it." }
+else { "Hello. I downloaded Cudo Lite from https://github.com/Nickflix3003/cudo-lite into $kit. Please read $kit\welcome\CLAUDE.md and follow it." }
 try { Start-Process ('claude://code/new?q=' + [uri]::EscapeDataString($ask)) }
 catch { Stop-Setup "the Claude app could not be opened: $_" 13 }
 Say 'DONE: a new session page is open in the Claude app with a message ready. Go there and press send'
