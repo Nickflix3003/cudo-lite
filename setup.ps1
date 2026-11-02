@@ -49,14 +49,6 @@ Say "Claude Code is ready"
 # The app's sign-in does not carry over to terminal Claude, so nothing here starts a terminal session or asks for a second sign-in.
 # It opens a new session page in the app, which already is signed in. The app fills the box and never sends it, so the person presses send.
 if (-not (Test-Path -LiteralPath 'Registry::HKEY_CLASSES_ROOT\claude')) { Stop-Setup 'the Claude desktop app is not installed on this PC' 12 }
-# Setup runs inside a Claude session; the marker is cleared so the app is opened as itself.
-Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
-# Opening the app from this folder first points it here where it can; a failure only means the session starts without a folder.
-try {
-  $d = Start-Process $claude -ArgumentList '--desktop' -WorkingDirectory $kit -WindowStyle Hidden -PassThru
-  if (-not $d.WaitForExit(20000)) { Stop-Process -Id $d.Id -Force -ErrorAction SilentlyContinue }
-  Say "opening the app from the kit folder returned $($d.ExitCode)"
-} catch { Say 'the app could not be opened from the kit folder, so the link alone will open it' }
 $ask = "Hello. I downloaded Cudo Lite from https://github.com/Nickflix3003/cudo-lite into $kit. Please read $kit\welcome\CLAUDE.md and follow it."
 try { Start-Process ('claude://code/new?q=' + [uri]::EscapeDataString($ask)) }
 catch { Stop-Setup "the Claude app could not be opened: $_" 13 }

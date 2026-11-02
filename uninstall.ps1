@@ -1,5 +1,4 @@
-# The welcome session runs this on a no. Removes only the two Cudo folders, and only if they are really Cudo's. Claude Code and the Claude app stay.
-function Quoted([string]$p) { "'" + [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($p) + "'" }
+# The welcome session runs this on a no. Moves only the Cudo folders to the Recycle Bin, and only if they are really Cudo's, so a no can be undone. Claude Code and the Claude app stay.
 $ErrorActionPreference = 'Stop'
 $kit = $PSScriptRoot
 $welcome = Join-Path $HOME 'cudo-welcome'
@@ -12,18 +11,15 @@ if (-not (Test-Path -LiteralPath (Join-Path $kit '.cudo-lite-kit'))) {
 } else { $targets += $kit }
 $mark = Join-Path $welcome 'CLAUDE.md'
 if ((Test-Path -LiteralPath $mark) -and ((Get-Content -LiteralPath $mark -TotalCount 1) -eq '# Cudo welcome')) { $targets += $welcome }
-if (-not $targets) { "Cudo: nothing was removed.$kept"; exit 0 }
-# Both folders can be in use while this runs (this script lives in one, and the session may sit in it), so a hidden helper
-# in the temp folder keeps trying for an hour, then deletes itself. It runs from the temp folder so it holds neither one open.
-$helper = Join-Path $env:TEMP ("cudo-remove-" + [guid]::NewGuid().ToString('N') + '.ps1')
-@"
-`$targets = @($(($targets | ForEach-Object { Quoted $_ }) -join ', '))
-for (`$i = 0; `$i -lt 720; `$i++) {
-  foreach (`$t in `$targets) { if (Test-Path -LiteralPath `$t) { Remove-Item -LiteralPath `$t -Recurse -Force -ErrorAction SilentlyContinue } }
-  if (-not (`$targets | Where-Object { Test-Path -LiteralPath `$_ })) { break }
-  Start-Sleep 5
+if (-not $targets) { "Cudo: nothing was moved.$kept"; exit 0 }
+# This script lives in the kit, so step out of it first.
+Set-Location -LiteralPath $HOME
+Add-Type -AssemblyName Microsoft.VisualBasic
+$failed = @(); $moved = @()
+foreach ($t in $targets) {
+  try { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($t, [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs, [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin); $moved += $t }
+  catch { $failed += $t }
 }
-Remove-Item -LiteralPath $(Quoted $helper) -ErrorAction SilentlyContinue
-"@ | Set-Content -LiteralPath $helper -Encoding Unicode
-Start-Process powershell -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$helper`"" -WorkingDirectory $env:TEMP -WindowStyle Hidden
-"Cudo: removing the Cudo folders. Claude Code and the Claude app stay on this PC.$kept"
+$done = if ($moved) { " Sent to the Recycle Bin, if it is turned on on this PC: $($moved -join ', ')." } else { '' }
+if ($failed) { "Cudo: these folders could not be moved, most likely because something has them open: $($failed -join ', ').$done$kept"; exit 1 }
+"Cudo:$done Claude Code and the Claude app stay on this PC.$kept"

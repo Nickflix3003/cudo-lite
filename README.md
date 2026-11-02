@@ -2,7 +2,7 @@
 
 Cudo Lite is a safety charter, two skills and three small PowerShell scripts that let Claude Code diagnose and fix problems on a Windows PC, with the owner's permission at every step.
 
-- **Nothing keeps running.** No services, no scheduled tasks, no startup entries. Setup's only background step is a short hidden session that says hello; if you answer no, a hidden helper removes the Cudo folders and then itself.
+- **Nothing keeps running.** No services, no scheduled tasks, no startup entries. Setup runs nothing in the background. If you answer no, the Cudo folders go to the Recycle Bin.
 - **Nothing phones home.** No telemetry, no uploads, no accounts of its own. The one flow of data is Claude itself: what the assistant reads is sent to the Claude account you are signed in to. Setup never asks you to sign in.
 - **Nothing changes without a typed yes.** The assistant looks first (read-only), then asks before each change.
 
@@ -24,6 +24,6 @@ Open the Claude desktop app, go to the Code tab, and paste the prompt from `INST
 
 ## Remove
 
-Answer no in the welcome session, or delete the `cudo-lite` folder. Answering no removes `cudo-lite`, and a `cudo-welcome` folder if an older version made one, unless Cudo has already made changes on this PC, in which case `cudo-lite` stays so you keep the list of changes. Claude Code stays either way.
+Answer no in the welcome session, or delete the `cudo-lite` folder. Answering no moves `cudo-lite` to the Recycle Bin, and a `cudo-welcome` folder if an older version made one, unless Cudo has already made changes on this PC, in which case `cudo-lite` stays so you keep the list of changes. Claude Code stays either way.
 
 Every change the assistant made to the PC is listed in `CHANGES.md` with the way to undo it, so you can reverse any of them first. System restore points it created stay in Windows until you remove them in System Protection settings.

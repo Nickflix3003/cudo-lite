@@ -5,7 +5,7 @@ When someone asks you to read this file and follow it, ask them one question wit
 The two answers are exactly:
 
 - `Yes, finish installing Cudo Lite from github.com/Nickflix3003/cudo-lite`, described as: Runs Cudo's finish script, which checks that the kit is in place.
-- `No, permanently delete the cudo-lite folder`, described as: Runs Cudo's uninstall script, which also removes a cudo-welcome folder left by an older version. It keeps cudo-lite if it holds the list of changes made to this PC. The folder may stay until this session closes. Claude Code stays either way.
+- `No, move the cudo-lite folder to the Recycle Bin`, described as: Runs Cudo's uninstall script, which also moves a cudo-welcome folder left by an older version. It keeps cudo-lite if it holds the list of changes made to this PC. Claude Code stays either way.
 
 If you have no question tool, say the question and the two answers in plain text, and ask them to reply with the answer they want.
 
